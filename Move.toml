@@ -1,0 +1,16 @@
+[package]
+name = 'fungible_asset_bypass'
+version = '1.0.0'
+upgrade_policy = "immutable"
+
+[dependencies]
+AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "main" }
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "main" }
+AptosTokenObjects = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token-objects/", rev = "main" }
+
+
+[addresses]
+fungible_asset_bypass = "_"
+
+[dev-addresses]
+fungible_asset_bypass = "0x1234"
