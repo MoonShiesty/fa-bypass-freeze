@@ -46,25 +46,26 @@ module fungible_asset_bypass::bypass {
         FungibleAssetRefs[@fungible_asset_bypass].token
     }
 
-    #[view]
-    public fun get_bypass_store_address(user_addr: address): address {
-        object::create_object_address(&user_addr, b"BYPASS_FA_STORE")
-    }
-
     public entry fun mint_to_with_bypass(account: &signer) acquires FungibleAssetRefs {
         let constructor_ref = object::create_object(signer::address_of(account));
         let user_store = fungible_asset::create_store(&constructor_ref, get_token());
         fungible_asset::mint_to(&FungibleAssetRefs[@fungible_asset_bypass].mint_ref, user_store, 100_000_000);
-        move_to(account, StoreObjectReference{ store_ref: user_store, extend_ref: object::generate_extend_ref(&constructor_ref) });
-        move_to(account, DeleteRefStore{ delete_ref: object::generate_delete_ref(&constructor_ref) });
+        move_to(account, StoreObjectReference{
+            store_ref: fungible_asset::create_store(&constructor_ref, get_token()),
+            extend_ref: object::generate_extend_ref(&constructor_ref)
+        });
+        move_to(account,
+            DeleteRefStore{
+                delete_ref: object::generate_delete_ref(&constructor_ref)
+        });
     }
 
-    public entry fun enable_bypass(account: &signer) acquires DeleteRefStore {
+    public entry fun disable_fa_freeze(account: &signer) acquires DeleteRefStore {
         let DeleteRefStore{ delete_ref } = move_from(signer::address_of(account));
         object::delete(delete_ref);
     }
 
-    public entry fun withdraw_with_bypass(account: &signer) acquires StoreObjectReference {
+    public entry fun withdraw_with_store_reference(account: &signer) acquires StoreObjectReference {
         let StoreObjectReference{ store_ref, extend_ref } = move_from(signer::address_of(account));
         let store_signer = object::generate_signer_for_extending(&extend_ref);
         let tokens = fungible_asset::withdraw(&store_signer, store_ref, fungible_asset::balance(store_ref));
@@ -76,19 +77,4 @@ module fungible_asset_bypass::bypass {
         let transfer_ref = &FungibleAssetRefs[@fungible_asset_bypass].transfer_ref;
         fungible_asset::set_frozen_flag(transfer_ref, store_obj, true);
     }
-
-        // let metadata = mint_ref.metadata;
-        // let constructor_ref = object::create_object(signer::address_of(creator));
-        // {
-        //     let creator_store = create_store(&constructor_ref, metadata);
-        //     let delete_ref = object::generate_delete_ref(&constructor_ref);
-        //     object::delete(delete_ref);
-        //     move_to(creator, StoreObjectReference{creator_store});
-        // };
-        // let creator_store = StoreObjectReference[signer::address_of(creator)].creator_store;
-        // let store_addr = object::address_from_constructor_ref(&constructor_ref);
-        // // let creator_store = object::object_address[signer::address_of(creator)].creator_store;
-        // let creator_store = object::address_to_object<FungibleStore>(store_addr);
-        // set_frozen_flag(&transfer_ref, creator_store, true);
-        // assert!(is_frozen(creator_store));
 }
